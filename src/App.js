@@ -1,23 +1,57 @@
-import logo from './logo.svg';
-import './App.css';
+import logo from "./logo.svg";
+import "./App.css";
+import React, { useState, useEffect } from "react";
+import Header from "./component/Header";
+import Search from "./component/Search";
+import Button from "./component/Button";
+import Table from "./component/Table";
+import Explore from "./component/Explore";
+import Footer from "./component/Footer";
 
-function App() {
+function App(props) {
+  const [data, setData] = useState([]);
+  const [desData, setDesData] = useState([]);
+  const [active, seActive] = useState(1);
+  
+  useEffect(() => {
+    fetch("http://devapi.hidoc.co:8080/hidoc-us/drug/getDrugList", {
+      method: "POST",
+      drugData: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (res?.ok) {
+          return res.json();
+        }
+        return Promise.reject(res);
+      })
+      .then((data) => {
+        const resData = data.data;
+        setData(resData);
+        setDesData([data?.data?.drugData[0]]);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  const drugDetailHandler = (e, item) => {
+    const filteredData = data?.drugData?.filter((itm) => {
+      if (item === itm.id) {
+        return itm;
+      }
+    });
+    seActive(item);
+    setDesData(filteredData);
+  };
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Header />
+      <Search />
+      <Button />
+      <Table drugDetailHandler={drugDetailHandler} desData={desData} active={active} data={data.drugData} />
+      <Explore data={data?.exploreMore}/>  
+      <Footer />
     </div>
   );
 }
